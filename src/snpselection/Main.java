@@ -8,8 +8,10 @@ package snpselection;
 import java.io.BufferedReader;
 import java.util.*;
 import java.io.IOException;
+import static java.lang.Thread.sleep;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
@@ -28,8 +30,6 @@ public class Main extends javax.swing.JFrame {
         initComponents();
     }
     /**
-     * TODO: Load data
-     * TODO: Add ability to run data and re-enable stuff
      * TODO: User-hints and tooltip texts
      * TODO: Error checking for data input and algorithm parameters
      * TODO: Algorithm-specific parameters
@@ -40,6 +40,8 @@ public class Main extends javax.swing.JFrame {
      * TODO: Add support for retrieving SNPSelection data from thousand genomes problem autonomously with annotations
      * TODO: Add support for external SNP visualizatio software like UCSC genome browser
      * TODO: add support for running from command line
+     * TODO: Time estimation of completion based on machine learning on training and testing data
+     * TODO: Much better GUI in different interface
      */
     
 
@@ -124,6 +126,7 @@ public class Main extends javax.swing.JFrame {
         jLabel5.setText("# of SNPs");
 
         jTextField1.setEnabled(false);
+        // Code adding the component to the parent container - not shown here
 
         jTextField2.setEnabled(false);
 
@@ -217,7 +220,6 @@ public class Main extends javax.swing.JFrame {
         this.jTextField1.setText(""+data.get(0).size());
         this.jTextField2.setText(""+data.size());
         enableGUI(true);
-        System.out.println();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
@@ -228,21 +230,57 @@ public class Main extends javax.swing.JFrame {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         int numSNPs = Integer.parseInt(jTextField1.getText());
         int numHaps = Integer.parseInt(jTextField2.getText());
+        isRunning = new AtomicBoolean(true);
+        SNPSelectionAlgo algo;
         if(this.jRadioButton1.isSelected()){
-            SNPSelectionAlgo algo = new LDSelect(data, metadata, numSNPs, numHaps);
+            algo = new LDSelect(data, metadata, numSNPs, numHaps);
             try{
-                algo.runAlgo();
+                algo.runAlgo();                                        
             }catch(Exception exe){
                 //TODO: Analyze exception and notify user
             }
-        }else if(this.jRadioButton1.isSelected()){
+        }else if(this.jRadioButton2.isSelected()){
             //TODO: run HLL algorithm
         }else{
             //run tree join algorithm
         }
+        waitComplete();
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton3ActionPerformed
 
+    /**
+     * Continually updates status of job until is is complete
+     * TODO: Spawn helper thread to update status of new job
+     */
+    private void waitComplete(){
+        class profileTask implements Runnable {
+            private double timeRunning;
+
+            profileTask() {
+                this.timeRunning = 0;
+            }
+            
+            @Override
+            public void run(){                
+                try{
+                    while(isRunning.get() == true){
+                        jTextArea1.setText("Running job for " + timeRunning + " seconds... Current status\n:");
+                        //TODO add and get current status from job 
+                        sleep(1000);
+                    }
+                }catch(Exception exe){
+                    if(exe instanceof InterruptedException){
+                        //TODO profile thread at a given interval and update status if there are changes
+                        System.out.println("updating status\n");
+                    }
+                    isRunning.set(false);
+                    //TODO other error handling code
+                }
+            }
+        }
+        new profileTask().run();
+    }  
+    
     /**
      * @param args the command line arguments
      */
@@ -362,6 +400,7 @@ public class Main extends javax.swing.JFrame {
     
     private static List<List<Integer>> data; //SNP data
     private static HashMap<String, Object> metadata; //metadata containing SNPData, TODO: instead of extending object add support for generic insertion
+    private static AtomicBoolean isRunning = new AtomicBoolean(false);
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
@@ -382,4 +421,5 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField2;
     // End of variables declaration//GEN-END:variables
 
+    
 }
