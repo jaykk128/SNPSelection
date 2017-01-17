@@ -4,7 +4,7 @@ import java.util.*;
 
 /**
  *
- * @author Jay Khurana
+ * @author Marko Fejzo
  */
 public class LDSelect extends SNPSelectionAlgo {
 
